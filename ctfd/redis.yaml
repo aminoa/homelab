@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctfd-cache
+  namespace: ctfd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ctfd-cache
+  template:
+    metadata:
+      labels:
+        app: ctfd-cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:4
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: ctfd-redis
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ctfd-cache
+  namespace: ctfd
+spec:
+  selector:
+    app: ctfd-cache
+  ports:
+    - port: 6379
+      targetPort: 6379

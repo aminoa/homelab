@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctfd-db
+  namespace: ctfd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ctfd-db
+  template:
+    metadata:
+      labels:
+        app: ctfd-db
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.11
+          ports:
+            - containerPort: 3306
+          args:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+            - --wait_timeout=28800
+            - --log-warnings=0
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ctfd-secrets
+                  key: db-root-password
+            - name: MARIADB_DATABASE
+              value: ctfd
+            - name: MARIADB_USER
+              value: ctfd
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ctfd-secrets
+                  key: db-password
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: ctfd-db
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ctfd-db
+  namespace: ctfd
+spec:
+  selector:
+    app: ctfd-db
+  ports:
+    - port: 3306
+      targetPort: 3306
