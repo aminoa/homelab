@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: emptypad
+  namespace: emptypad
+spec:
+  selector:
+    app: emptypad
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
