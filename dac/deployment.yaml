@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dac
+  namespace: dac
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dac
+  template:
+    metadata:
+      labels:
+        app: dac
+    spec:
+      containers:
+        - name: dac
+          image: aminoa/dac:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
