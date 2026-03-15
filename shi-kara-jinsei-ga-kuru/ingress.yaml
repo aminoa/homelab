@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shi-kara-jinsei-ga-kuru
+  namespace: shi-kara-jinsei-ga-kuru
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: shi-kara-jinsei-ga-kuru.aneeshmaganti.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shi-kara-jinsei-ga-kuru
+                port:
+                  number: 80

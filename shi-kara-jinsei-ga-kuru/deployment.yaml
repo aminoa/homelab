@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shi-kara-jinsei-ga-kuru
+  namespace: shi-kara-jinsei-ga-kuru
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shi-kara-jinsei-ga-kuru
+  template:
+    metadata:
+      labels:
+        app: shi-kara-jinsei-ga-kuru
+    spec:
+      containers:
+        - name: shi-kara-jinsei-ga-kuru
+          image: aminoa/shi-kara-jinsei-ga-kuru:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
