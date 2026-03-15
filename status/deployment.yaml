@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status
+  namespace: status
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: status
+  template:
+    metadata:
+      labels:
+        app: status
+    spec:
+      containers:
+        - name: status
+          image: aminoa/status:latest
+          ports:
+            - containerPort: 3000
