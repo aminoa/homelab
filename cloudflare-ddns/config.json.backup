@@ -1,0 +1,36 @@
+{
+  "cloudflare": [
+    {
+      "authentication": {
+        "api_token": ""
+      },
+      "zone_id": "",
+      "subdomains": [
+        {
+          "name": "dac",
+          "proxied": true
+        },
+        {
+          "name": "status",
+          "proxied": true
+        },
+        {
+          "name": "emptypad",
+          "proxied": true
+        },
+        {
+          "name": "recruit",
+          "proxied": true
+        },
+        {
+          "name": "shi-kara-jinsei-ga-kuru",
+          "proxied": true
+        }
+      ]
+    }
+  ],
+  "a": true,
+  "aaaa": false,
+  "purgeUnknownRecords": false,
+  "ttl": 300
+}
