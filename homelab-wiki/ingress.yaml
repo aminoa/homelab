@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homelab-wiki
+  namespace: homelab-wiki
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: homelab.aneeshmaganti.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homelab-wiki
+                port:
+                  number: 80

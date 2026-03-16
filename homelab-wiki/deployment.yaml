@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homelab-wiki
+  namespace: homelab-wiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homelab-wiki
+  template:
+    metadata:
+      labels:
+        app: homelab-wiki
+    spec:
+      containers:
+        - name: homelab-wiki
+          image: aminoa/homelab-wiki:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
