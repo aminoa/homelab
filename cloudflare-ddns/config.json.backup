@@ -25,7 +25,15 @@
         {
           "name": "shi-kara-jinsei-ga-kuru",
           "proxied": true
-        }
+        },
+        {
+          "name": "homelab",
+          "proxied": true
+        },
+        {
+          "name": "ball-shoot",
+          "proxied": true
+ 
       ]
     }
   ],
