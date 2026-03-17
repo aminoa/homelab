@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ball-shoot
+  namespace: ball-shoot
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ball-shoot.aneeshmaganti.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ball-shoot
+                port:
+                  number: 80

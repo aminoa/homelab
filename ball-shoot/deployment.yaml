@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ball-shoot
+  namespace: ball-shoot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ball-shoot
+  template:
+    metadata:
+      labels:
+        app: ball-shoot
+    spec:
+      containers:
+        - name: ball-shoot
+          image: aminoa/ball-shoot:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10

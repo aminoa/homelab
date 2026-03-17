@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ball-shoot
+  namespace: ball-shoot
+spec:
+  selector:
+    app: ball-shoot
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
