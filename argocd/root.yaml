@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aminoa/homelab.git
+    targetRevision: main
+    # Watches the directory of child Application manifests. root.yaml itself lives
+    # one level up (argocd/root.yaml), so the root app never manages itself.
+    path: argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  # Manual sync (safe-first). Syncing root only creates/updates Application
+  # objects — it does not touch app workloads. Once comfortable, enable:
+  #   syncPolicy:
+  #     automated:
+  #       selfHeal: true
+  #       prune: false

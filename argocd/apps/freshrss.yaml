@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: freshrss
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aminoa/homelab.git
+    targetRevision: main
+    path: freshrss
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: freshrss
+  # syncPolicy intentionally left manual (safe-first): review the diff in the UI,
+  # sync by hand, then add automated { prune, selfHeal } once the diff is clean.
