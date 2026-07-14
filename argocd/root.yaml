@@ -14,9 +14,10 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
-  # Manual sync (safe-first). Syncing root only creates/updates Application
-  # objects — it does not touch app workloads. Once comfortable, enable:
-  #   syncPolicy:
-  #     automated:
-  #       selfHeal: true
-  #       prune: false
+  syncPolicy:
+    automated:
+      # New/changed child Application manifests in argocd/apps/ auto-register.
+      selfHeal: true
+      # prune: removing a file in argocd/apps/ deletes that Application
+      # (and cascades to its workloads). Standard app-of-apps behavior.
+      prune: true

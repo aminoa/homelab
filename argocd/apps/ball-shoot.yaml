@@ -12,5 +12,9 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: ball-shoot
-  # syncPolicy intentionally left manual (safe-first): review the diff in the UI,
-  # sync by hand, then add automated { prune, selfHeal } once the diff is clean.
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
