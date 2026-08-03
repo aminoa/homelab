@@ -1,19 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
+  name: freshrss
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
-    path: longhorn
-    directory:
-      recurse: true
+    path: k3s/freshrss
   destination:
     server: https://kubernetes.default.svc
-    namespace: longhorn-system
+    namespace: freshrss
   syncPolicy:
     automated:
       selfHeal: true

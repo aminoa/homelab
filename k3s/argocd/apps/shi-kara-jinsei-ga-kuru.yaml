@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: freshrss
+  name: shi-kara-jinsei-ga-kuru
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
-    path: freshrss
+    path: k3s/shi-kara-jinsei-ga-kuru
   destination:
     server: https://kubernetes.default.svc
-    namespace: freshrss
+    namespace: shi-kara-jinsei-ga-kuru
   syncPolicy:
     automated:
       selfHeal: true

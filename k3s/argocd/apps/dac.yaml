@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: shi-kara-jinsei-ga-kuru
+  name: dac
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
-    path: shi-kara-jinsei-ga-kuru
+    path: k3s/dac
   destination:
     server: https://kubernetes.default.svc
-    namespace: shi-kara-jinsei-ga-kuru
+    namespace: dac
   syncPolicy:
     automated:
       selfHeal: true

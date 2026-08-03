@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dac
+  name: homelab-wiki
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
-    path: dac
+    path: k3s/homelab-wiki
   destination:
     server: https://kubernetes.default.svc
-    namespace: dac
+    namespace: homelab-wiki
   syncPolicy:
     automated:
       selfHeal: true

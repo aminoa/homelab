@@ -9,8 +9,8 @@ spec:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
     # Watches the directory of child Application manifests. root.yaml itself lives
-    # one level up (argocd/root.yaml), so the root app never manages itself.
-    path: argocd/apps
+    # one level up (k3s/argocd/root.yaml), so the root app never manages itself.
+    path: k3s/argocd/apps
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

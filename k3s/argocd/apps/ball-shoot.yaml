@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/aminoa/homelab.git
     targetRevision: main
-    path: ball-shoot
+    path: k3s/ball-shoot
   destination:
     server: https://kubernetes.default.svc
     namespace: ball-shoot
