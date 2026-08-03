@@ -1,0 +1,23 @@
+# Mirrors ../../k3s/emptypad (Deployment + Service + Ingress) as a Swarm stack:
+#   docker stack deploy -c compose.yaml emptypad
+#
+# No published ports — Traefik reaches this service by its endpoint on the
+# `edge` overlay network.
+services:
+  emptypad:
+    image: aminoa/emptypad:latest
+    networks:
+      - edge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.emptypad.rule: Host(`emptypad.aneeshmaganti.com`)
+        traefik.http.routers.emptypad.entrypoints: web,websecure
+        traefik.http.services.emptypad.loadbalancer.server.port: "80"
+
+networks:
+  edge:
+    external: true

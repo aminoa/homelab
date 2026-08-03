@@ -1,0 +1,23 @@
+# Mirrors ../../k3s/status (Deployment + Service + Ingress) as a Swarm stack:
+#   docker stack deploy -c compose.yaml status
+#
+# No published ports — Traefik reaches this service by its endpoint on the
+# `edge` overlay network.
+services:
+  status:
+    image: aminoa/status:latest
+    networks:
+      - edge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.status.rule: Host(`status.aneeshmaganti.com`)
+        traefik.http.routers.status.entrypoints: web,websecure
+        traefik.http.services.status.loadbalancer.server.port: "3000"
+
+networks:
+  edge:
+    external: true

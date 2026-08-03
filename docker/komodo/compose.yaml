@@ -1,0 +1,100 @@
+# Komodo (https://komo.do) for managing containers on this node. Deployed as a
+# Swarm stack, which keeps the volume names it already had under Compose:
+#   docker stack deploy -c compose.yaml komodo
+#
+# Adapted from https://github.com/moghtech/komodo/blob/main/compose/ferretdb.compose.yaml
+# with image versions pinned. Swarm ignores depends_on, so Core may restart a
+# few times while Postgres initializes on a cold start — restart_policy covers it.
+services:
+  postgres:
+    image: ghcr.io/ferretdb/postgres-documentdb:17-0.107.0-ferretdb-2.7.0
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${KOMODO_DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${KOMODO_DATABASE_PASSWORD}
+      POSTGRES_DB: postgres
+    networks:
+      - default
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        komodo.skip: "" # Prevent Komodo from stopping with StopAllContainers
+
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:2.7.0
+    volumes:
+      - ferretdb-state:/state
+    environment:
+      FERRETDB_POSTGRESQL_URL: postgres://${KOMODO_DATABASE_USERNAME}:${KOMODO_DATABASE_PASSWORD}@postgres:5432/postgres
+    networks:
+      - default
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        komodo.skip: ""
+
+  core:
+    image: ghcr.io/moghtech/komodo-core:${COMPOSE_KOMODO_IMAGE_TAG:-2}
+    init: true
+    env_file: ./compose.env
+    environment:
+      KOMODO_DATABASE_ADDRESS: ferretdb:27017
+    volumes:
+      # Core / Periphery communication keys
+      - keys:/config/keys
+      # Dated database backups - https://komo.do/docs/setup/backup
+      - ${COMPOSE_KOMODO_BACKUPS_PATH}:/backups
+    networks:
+      # `default` keeps Core talking to FerretDB; `edge` is only for Traefik.
+      - default
+      - edge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.komodo.rule: Host(`komodo.aneeshmaganti.com`)
+        traefik.http.routers.komodo.entrypoints: web,websecure
+        traefik.http.services.komodo.loadbalancer.server.port: "9120"
+
+  periphery:
+    image: ghcr.io/moghtech/komodo-periphery:${COMPOSE_KOMODO_IMAGE_TAG:-2}
+    init: true
+    env_file: ./compose.env
+    volumes:
+      - keys:/config/keys
+      # Manage the host's containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # See processes outside of the container
+      - /proc:/proc
+      # Agent root dir. Must be the same path inside and outside the container.
+      - ${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}:${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}
+    networks:
+      - default
+    deploy:
+      replicas: 1
+      # The socket only exists on managers.
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+      labels:
+        komodo.skip: ""
+
+volumes:
+  postgres-data:
+  ferretdb-state:
+  keys:
+
+networks:
+  default:
+  # Created by ../traefik; only Core joins it.
+  edge:
+    external: true

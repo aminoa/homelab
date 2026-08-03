@@ -1,0 +1,23 @@
+# Mirrors ../../k3s/dac (Deployment + Service + Ingress) as a Swarm stack:
+#   docker stack deploy -c compose.yaml dac
+#
+# No published ports — Traefik reaches this service by its endpoint on the
+# `edge` overlay network.
+services:
+  dac:
+    image: aminoa/dac:latest
+    networks:
+      - edge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.dac.rule: Host(`dac.aneeshmaganti.com`)
+        traefik.http.routers.dac.entrypoints: web,websecure
+        traefik.http.services.dac.loadbalancer.server.port: "80"
+
+networks:
+  edge:
+    external: true

@@ -1,0 +1,54 @@
+# Edge router for the app stacks, standing in for the k3s Traefik that serves
+# the Ingress manifests under ../../k3s. Deployed as a Swarm stack:
+#   docker stack deploy -c compose.yaml traefik
+#
+# Each app stack attaches to the `edge` overlay network and declares its own
+# Host(...) router in deploy.labels, so this file never changes as apps come and
+# go. Traefik reaches them by service endpoint on the overlay — the apps publish
+# no host ports at all, and only this service binds anything on the node.
+services:
+  traefik:
+    image: traefik:v3.7.10
+    command:
+      # Swarm provider reads *service* labels (deploy.labels), not container ones.
+      - --providers.swarm=true
+      - --providers.swarm.endpoint=unix:///var/run/docker.sock
+      # Only route services that opt in with traefik.enable=true.
+      - --providers.swarm.exposedByDefault=false
+      - --providers.swarm.network=edge
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      # TLS for every router on this entrypoint, so app stacks only have to name
+      # the entrypoint. With no certificate configured Traefik serves its own
+      # self-signed one, which is what Cloudflare's "Full" SSL mode expects
+      # (and what the k3s Traefik was doing). See README for "Full (strict)".
+      - --entryPoints.websecure.http.tls=true
+      - --accesslog=true
+      - --log.level=INFO
+    ports:
+      # host mode, not the routing mesh: one instance per node binds the port
+      # directly, which keeps the real client IP in the access logs.
+      - target: 80
+        published: 80
+        mode: host
+      - target: 443
+        published: 443
+        mode: host
+    volumes:
+      # Read-only: Traefik just needs to watch service labels.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge
+    deploy:
+      # global + manager constraint: the socket only exists on managers, and
+      # every node that joins should get a router.
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+
+networks:
+  edge:
+    external: true
