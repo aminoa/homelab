@@ -1,4 +1,3 @@
 .DS_Store
 .env
 config.json
-docker/komodo/compose.env

@@ -6,16 +6,19 @@
 # with image versions pinned. Swarm ignores depends_on, so Core may restart a
 # few times while Postgres initializes on a cold start — restart_policy covers it.
 #
-# Secrets come from Swarm rather than compose.env; see the `secrets` block at the
-# bottom. Every consumer here reads them via a *_FILE variable, so no secret
-# value is ever in this file, in the environment, or in `docker inspect`.
+# No env files and no shell interpolation: non-secret settings are inline below,
+# and every credential comes from a Swarm secret via a *_FILE variable, so no
+# secret value is in this file, in the environment, or in `docker inspect`.
+# Full variable list: https://github.com/moghtech/komodo/blob/main/compose/compose.env
+#
+# Note. Bumping Komodo means changing the tag on both core and periphery.
 services:
   postgres:
     image: ghcr.io/ferretdb/postgres-documentdb:17-0.107.0-ferretdb-2.7.0
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${KOMODO_DATABASE_USERNAME}
+      POSTGRES_USER: komodo
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: postgres
     secrets:
@@ -49,15 +52,29 @@ services:
         komodo.skip: ""
 
   core:
-    image: ghcr.io/moghtech/komodo-core:${COMPOSE_KOMODO_IMAGE_TAG:-2}
+    image: ghcr.io/moghtech/komodo-core:2.3.1
     init: true
-    env_file: ./compose.env
     environment:
+      TZ: America/New_York
       KOMODO_DATABASE_ADDRESS: ferretdb:27017
+      KOMODO_DATABASE_USERNAME: komodo
       KOMODO_DATABASE_PASSWORD_FILE: /run/secrets/db_password
       KOMODO_JWT_SECRET_FILE: /run/secrets/jwt_secret
+      KOMODO_JWT_TTL: 1-day
       KOMODO_WEBHOOK_SECRET_FILE: /run/secrets/webhook_secret
+      # Used for Oauth / webhook URL suggestions.
+      KOMODO_HOST: https://komodo.aneeshmaganti.com
+      KOMODO_TITLE: Komodo
+      KOMODO_PERIPHERY_PUBLIC_KEY: file:/config/keys/periphery.pub
+      KOMODO_LOCAL_AUTH: "true"
+      # Initial admin user, created on first launch only.
+      KOMODO_INIT_ADMIN_USERNAME: admin
       KOMODO_INIT_ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+      # Name of the Server that Periphery auto-registers as.
+      KOMODO_FIRST_SERVER_NAME: Local
+      # Nobody else should be able to sign up on a homelab instance.
+      KOMODO_DISABLE_USER_REGISTRATION: "true"
+      KOMODO_ENABLE_NEW_USERS: "false"
     secrets:
       - db_password
       - jwt_secret
@@ -67,7 +84,7 @@ services:
       # Core / Periphery communication keys
       - keys:/config/keys
       # Dated database backups - https://komo.do/docs/setup/backup
-      - ${COMPOSE_KOMODO_BACKUPS_PATH}:/backups
+      - /etc/komodo/backups:/backups
     networks:
       # `default` keeps Core talking to FerretDB; `edge` is only for Traefik.
       - default
@@ -83,17 +100,26 @@ services:
         traefik.http.services.komodo.loadbalancer.server.port: "9120"
 
   periphery:
-    image: ghcr.io/moghtech/komodo-periphery:${COMPOSE_KOMODO_IMAGE_TAG:-2}
+    image: ghcr.io/moghtech/komodo-periphery:2.3.1
     init: true
-    env_file: ./compose.env
+    environment:
+      TZ: America/New_York
+      PERIPHERY_CORE_ADDRESS: ws://core:9120
+      # Must match KOMODO_FIRST_SERVER_NAME on core.
+      PERIPHERY_CONNECT_AS: Local
+      PERIPHERY_CORE_PUBLIC_KEYS: file:/config/keys/core.pub
+      # Compose files / repos Komodo manages must live under this directory,
+      # and it must be the same path inside and outside the container.
+      PERIPHERY_ROOT_DIRECTORY: /etc/komodo
+      # Keeps the reported disk size from double-counting mounts.
+      PERIPHERY_INCLUDE_DISK_MOUNTS: /etc/hostname
     volumes:
       - keys:/config/keys
       # Manage the host's containers
       - /var/run/docker.sock:/var/run/docker.sock
       # See processes outside of the container
       - /proc:/proc
-      # Agent root dir. Must be the same path inside and outside the container.
-      - ${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}:${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}
+      - /etc/komodo:/etc/komodo
     networks:
       - default
     deploy:
